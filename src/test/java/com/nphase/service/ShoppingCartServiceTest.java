@@ -1,5 +1,6 @@
 package com.nphase.service;
 
+import com.nphase.configuration.DiscountConfiguration;
 import com.nphase.entity.Category;
 import com.nphase.entity.Product;
 import com.nphase.entity.ShoppingCart;
@@ -12,9 +13,13 @@ import org.junit.jupiter.api.Test;
 public class ShoppingCartServiceTest {
   private final ProductPriceCalculatorService productPriceCalculatorService =
       new ProductPriceCalculatorService();
+
+  private final DiscountConfiguration discountConfiguration =
+      new DiscountConfiguration(4, BigDecimal.TEN);
   private final ShoppingCartService cut =
       new ShoppingCartService(
-          new DiscountService(productPriceCalculatorService), productPriceCalculatorService);
+          new DiscountService(discountConfiguration, productPriceCalculatorService),
+          productPriceCalculatorService);
 
   @Test
   public void

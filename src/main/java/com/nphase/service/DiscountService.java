@@ -1,5 +1,6 @@
 package com.nphase.service;
 
+import com.nphase.configuration.DiscountConfiguration;
 import com.nphase.entity.Product;
 import com.nphase.entity.ShoppingCart;
 import java.math.BigDecimal;
@@ -12,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DiscountService {
   private static final BigDecimal ONE_HUNDRED_PERCENT = new BigDecimal("100");
-  public static final long MIN_QUALITY_AMOUNT_DISCOUNT = 4L;
+
+  private final DiscountConfiguration discountConfiguration;
 
   private final ProductPriceCalculatorService productPriceCalculatorService;
 
@@ -24,8 +26,15 @@ public class DiscountService {
         shoppingCart.getProducts().stream().collect(Collectors.groupingBy(Product::getCategory));
 
     return categoryToProducts.values().stream()
-        .filter(products -> countQuality(products) >= MIN_QUALITY_AMOUNT_DISCOUNT)
-        .map(products -> sumCartAmount(products).multiply(new QualityDiscount().priceMultiplier()))
+        .filter(
+            products ->
+                countQuality(products) >= discountConfiguration.getMinItemsQuantityInCategory())
+        .map(
+            products ->
+                sumCartAmount(products)
+                    .multiply(
+                        new QualityDiscount(discountConfiguration.getDiscountPercent())
+                            .priceMultiplier()))
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
@@ -53,9 +62,12 @@ public class DiscountService {
     }
   }
 
+  @RequiredArgsConstructor
   static class QualityDiscount implements Discount {
+    private final BigDecimal percent;
+
     public BigDecimal percent() {
-      return BigDecimal.TEN;
+      return percent;
     }
   }
 }
